@@ -68,10 +68,17 @@ jobs:
     - name: Package binaries
       run: |
         #ls     #Directory: D:\a\bqt\bqt(即仓库目录)
-        7z a Qt_${{env.QT_VERSION}}-${{env.FILE_NAME}}.7z ../Qt/${{env.QT_VERSION}}-static -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z install-x64-Debug-shared -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x64-Release-static.7z install-x64-Release-static -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x86-Debug-shared.7z install-x86-Debug-shared -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x86-Release-static.7z install-x86-Release-static -mx=9
 
-    # 上传
+    # 上传四个压缩包
     - uses: actions/upload-artifact@v4
       with:
-        name: Qt_${{env.QT_VERSION}}-${{env.FILE_NAME}}
-        path: Qt_${{env.QT_VERSION}}-${{env.FILE_NAME}}.7z
+        name: Qt_${{env.QT_VERSION}}-${{env.LLVM_MinGW_VERSION}}
+        path: |
+          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z
+          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x64-Release-static.7z
+          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x86-Debug-shared.7z
+          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x86-Release-static.7z
