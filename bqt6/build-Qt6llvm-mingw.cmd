@@ -15,33 +15,6 @@ SET SRC_QT=%QT_PATH%\%QT_VERSION%\qt-everywhere-src-%QT_VERSION%
 :: 通用配置参数
 SET COMMON_CFG=-opensource -confirm-license -nomake tests -nomake examples -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -schannel
 
-:: ==========================
-:: 3. 32位 Debug 共享库
-:: ==========================
-SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Debug-shared
-SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Debug-shared
-rmdir /s /q "%BUILD_DIR%" 2>nul
-mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
-
-call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-cmake --build . --parallel
-cmake --install .
-copy %~dp0\qt.conf %INSTALL_DIR%\bin
-
-:: ==========================
-:: 4. 32位 Release 静态库
-:: ==========================
-SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Release-static
-SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Release-static
-rmdir /s /q "%BUILD_DIR%" 2>nul
-mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
-
-call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-cmake --build . --parallel
-cmake --install .
-copy %~dp0\qt.conf %INSTALL_DIR%\bin
-
-
 REM :: ==========================
 REM :: 1. 64位 Debug 共享库
 REM :: ==========================
@@ -50,7 +23,11 @@ REM SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x64-Debug-shared
 REM rmdir /s /q "%BUILD_DIR%" 2>nul
 REM mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-REM call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- -DCMAKE_C_FLAGS=-m64 -DCMAKE_CXX_FLAGS=-m64
+REM call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- ^
+REM   -DCMAKE_C_FLAGS=-m64 ^
+REM   -DCMAKE_CXX_FLAGS=-m64 ^
+REM   -DCMAKE_RC_COMPILER=llvm-rc ^
+REM   -DCMAKE_RC_FLAGS="--machine=amd64"
 REM cmake --build . --parallel
 REM cmake --install .
 REM copy %~dp0\qt.conf %INSTALL_DIR%\bin
@@ -63,10 +40,48 @@ REM SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x64-Release-static
 REM rmdir /s /q "%BUILD_DIR%" 2>nul
 REM mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-REM call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- -DCMAKE_C_FLAGS=-m64 -DCMAKE_CXX_FLAGS=-m64
+REM call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- ^
+REM   -DCMAKE_C_FLAGS=-m64 ^
+REM   -DCMAKE_CXX_FLAGS=-m64 ^
+REM   -DCMAKE_RC_COMPILER=llvm-rc ^
+REM   -DCMAKE_RC_FLAGS="--machine=amd64"
 REM cmake --build . --parallel
 REM cmake --install .
 REM copy %~dp0\qt.conf %INSTALL_DIR%\bin
+
+:: ==========================
+:: 3. 32位 Debug 共享库
+:: ==========================
+SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Debug-shared
+SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Debug-shared
+rmdir /s /q "%BUILD_DIR%" 2>nul
+mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
+
+call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- ^
+  -DCMAKE_C_FLAGS=-m32 ^
+  -DCMAKE_CXX_FLAGS=-m32 ^
+  -DCMAKE_RC_COMPILER=llvm-rc ^
+  -DCMAKE_RC_FLAGS="--machine=ix86"
+cmake --build . --parallel
+cmake --install .
+copy %~dp0\qt.conf %INSTALL_DIR%\bin
+
+:: ==========================
+:: 4. 32位 Release 静态库
+:: ==========================
+SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Release-static
+SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Release-static
+rmdir /s /q "%BUILD_DIR%" 2>nul
+mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
+
+call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- ^
+  -DCMAKE_C_FLAGS=-m32 ^
+  -DCMAKE_CXX_FLAGS=-m32 ^
+  -DCMAKE_RC_COMPILER=llvm-rc ^
+  -DCMAKE_RC_FLAGS="--machine=ix86"
+cmake --build . --parallel
+cmake --install .
+copy %~dp0\qt.conf %INSTALL_DIR%\bin
 
 :: ==========================
 :: 结束
@@ -74,4 +89,3 @@ REM copy %~dp0\qt.conf %INSTALL_DIR%\bin
 @echo.
 @echo Qt %QT_VERSION% 四个版本全部编译完成！
 @cmd /k
-
