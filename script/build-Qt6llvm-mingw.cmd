@@ -33,12 +33,6 @@ call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix "%INSTALL_DIR%"
 cmake --build . --parallel
 cmake --install .
 
-:: 复制OpenSSL DLLs到安装目录（针对共享库构建）
-echo "Copying OpenSSL DLLs for shared debug build..."
-copy "%OPENSSL_LIBDIR%\..\bin\libcrypto-3-x64.dll" "%INSTALL_DIR%\bin"
-copy "%OPENSSL_LIBDIR%\..\bin\libssl-3-x64.dll" "%INSTALL_DIR%\bin"
-echo "Copying done."
-
 :: ================================
 :: 64位 Release 静态库
 :: ================================
