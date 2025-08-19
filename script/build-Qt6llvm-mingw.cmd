@@ -20,7 +20,7 @@ SET SRC_QT=%QT_PATH%\%QT_VERSION%\qt-everywhere-src-%QT_VERSION%
 :: -openssl-linked: 启用链接 OpenSSL 库
 :: -openssl-incdir: 指定 OpenSSL 头文件目录 (从 yml 文件中继承环境变量)
 :: -openssl-libdir: 指定 OpenSSL 库文件目录 (从 yml 文件中继承环境变量)
-SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -openssl-linked -openssl-incdir "%OPENSSL_INCDIR%" -openssl-libdir "%OPENSSL_LIBDIR%"
+SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -openssl-linked
 
 :: ================================
 :: 64位 Debug 共享库
