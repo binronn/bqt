@@ -13,13 +13,17 @@ SET PATH=D:\a\bqt\%LLVM_MinGW_VERSION%\bin;D:\a\bqt\ninja;%PATH%
 :: 设置Qt文件夹路径
 SET QT_PATH=D:\a\bqt\Qt
 
+:: =================================================================
+:: CORRECTED: Add OPENSSL_ROOT_DIR to tell CMake where to find OpenSSL
+:: =================================================================
+SET OPENSSL_ROOT_DIR=D:\msys64\ucrt64
+SET OPENSSL_INCDIR=D:\msys64\ucrt64\include
+SET OPENSSL_LIBDIR=D:\msys64\ucrt64\lib
+
 :: 公共源代码路径
 SET SRC_QT=%QT_PATH%\%QT_VERSION%\qt-everywhere-src-%QT_VERSION%
 
 :: 公共configure参数
-:: -openssl-linked: 启用链接 OpenSSL 库
-:: -openssl-incdir: 指定 OpenSSL 头文件目录 (从 yml 文件中继承环境变量)
-:: -openssl-libdir: 指定 OpenSSL 库文件目录 (从 yml 文件中继承环境变量)
 SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -openssl-linked
 
 :: ================================
@@ -41,7 +45,6 @@ echo "Copying OpenSSL DLLs for shared debug build..."
 copy "%OPENSSL_LIBDIR%\..\bin\libcrypto-3-x64.dll" "%INSTALL_DIR%\bin"
 copy "%OPENSSL_LIBDIR%\..\bin\libssl-3-x64.dll" "%INSTALL_DIR%\bin"
 echo "Copying done."
-
 
 :: ================================
 :: 64位 Release 静态库
