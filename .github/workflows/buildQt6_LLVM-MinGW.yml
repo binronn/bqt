@@ -1,15 +1,12 @@
-name: build_Qt6.9.1_LLVM-MinGW
-
 on: workflow_dispatch
-#on: [push, pull_request]
 
 env:
   QT_VERSION: 6.9.1
   QT_VERSION2: 6.9
-  FILE_NAME: static-Release_llvm-mingw20.1.6_64_UCRT
+  LLVM_MinGW_VERSION: llvm-mingw-20250528-ucrt-x86_64
 
 jobs:
-  windows_llvm-mingw_static_release:
+  windows_llvm_mingw:
     runs-on: windows-latest
 
     steps:
@@ -26,59 +23,68 @@ jobs:
 
     # 安装 LLVM-MinGW
     - name: Setup LLVM-MinGW
+      shell: pwsh
       run: |
-        cd ..  #Directory: D:\a\bqt
+        cd $env:RUNNER_TEMP
         curl -L -o llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/20250528/llvm-mingw-20250528-ucrt-x86_64.zip
-        unzip -q llvm-mingw.zip -d ./
+        7z x llvm-mingw.zip -o"D:\a\bqt"
 
     # 安装 Ninja
     - name: Setup Ninja
+      shell: pwsh
       run: |
-        cd ..  #Directory: D:\a\bqt
-        mkdir -p ninja
+        cd $env:RUNNER_TEMP
+        New-Item -ItemType Directory -Path "D:\a\bqt\ninja"
         curl -L -o ninja.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
-        unzip -q ninja.zip -d ./ninja
+        7z x ninja.zip -o"D:\a\bqt\ninja"
+
+    # 安装 MSYS2 并安装 OpenSSL
+    - name: Setup MSYS2 and OpenSSL
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: mingw-w64-ucrt-x86_64-openssl
 
     # 构建Qt
     - name: Build Qt
+      shell: pwsh
       run: |
-        #ls     #Directory: D:\a\bqt\bqt(即仓库目录)
-        #D:\a\bqt                                上级目录，这里当做根目录
-        #D:\a\bqt\Qt                             Qt目录
-        #D:\a\bqt\Qt\${{env.QT_VERSION}}         Qt目录源代码和build文件夹存放目录
-        #D:\a\bqt\Qt\${{env.QT_VERSION}}-static  Qt安装目录
-        
-        # 创建文件夹
-        cd ..  #Directory: D:\a\bqt
-        mkdir -p Qt
+        # 根目录 D:\a\bqt
+        $rootDir = "D:\a\bqt"
+        $qtDir = Join-Path $rootDir "Qt"
+        $qtVersionDir = Join-Path $qtDir "${{env.QT_VERSION}}"
 
         # 创建文件夹
-        cd Qt   #Directory: D:\a\bqt\Qt
-        mkdir -p ${{env.QT_VERSION}}
-        mkdir -p ${{env.QT_VERSION}}-static
+        New-Item -ItemType Directory -Path $qtDir -Force
+        New-Item -ItemType Directory -Path $qtVersionDir -Force
 
-        # 下载源代码并解压，源代码目录D:\a\bqt\Qt\${{env.QT_VERSION}}\XXX
+        # 下载源代码并解压
+        cd $qtDir
         curl -L -o qt-everywhere-src.zip https://download.qt.io/official_releases/qt/${{env.QT_VERSION2}}/${{env.QT_VERSION}}/single/qt-everywhere-src-${{env.QT_VERSION}}.zip
-        unzip -q qt-everywhere-src.zip -d ./${{env.QT_VERSION}}
+        7z x qt-everywhere-src.zip -o"$qtVersionDir"
+
+        # 设置 OpenSSL 路径环境变量
+        $msysPath = "D:\msys64\ucrt64"
+        $env:OPENSSL_INCDIR = "$msysPath\include"
+        $env:OPENSSL_LIBDIR = "$msysPath\lib"
+        
+        Write-Host "OPENSSL_INCDIR is set to: $env:OPENSSL_INCDIR"
+        Write-Host "OPENSSL_LIBDIR is set to: $env:OPENSSL_LIBDIR"
 
         # 调用编译脚本
-        cmd.exe /c "call `"D:\a\bqt\bqt\bqt6\build-Qt6llvm-mingw.cmd`""
+        cmd.exe /c "call `"${{ github.workspace }}\build-Qt6llvm-mingw.cmd`""
 
     # 打包
     - name: Package binaries
       run: |
-        #ls     #Directory: D:\a\bqt\bqt(即仓库目录)
-        7z a Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z install-x64-Debug-shared -mx=9
-        7z a Qt_${{env.QT_VERSION}}-x64-Release-static.7z install-x64-Release-static -mx=9
-        7z a Qt_${{env.QT_VERSION}}-x86-Debug-shared.7z install-x86-Debug-shared -mx=9
-        7z a Qt_${{env.QT_VERSION}}-x86-Release-static.7z install-x86-Release-static -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z D:\a\bqt\Qt\${{env.QT_VERSION}}-64-debug-shared -mx=9
+        7z a Qt_${{env.QT_VERSION}}-x64-Release-static.7z D:\a\bqt\Qt\${{env.QT_VERSION}}-64-release-static -mx=9
 
-    # 上传四个压缩包
+    # 上传构建产物
     - uses: actions/upload-artifact@v4
       with:
         name: Qt_${{env.QT_VERSION}}-${{env.LLVM_MinGW_VERSION}}
         path: |
-          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z
-          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x64-Release-static.7z
-          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x86-Debug-shared.7z
-          ../Qt/${{env.QT_VERSION}}/Qt_${{env.QT_VERSION}}-x86-Release-static.7z
+          Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z
+          Qt_${{env.QT_VERSION}}-x64-Release-static.7z

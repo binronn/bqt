@@ -1,91 +1,67 @@
 @chcp 65001
 @cd /d %~dp0
 
-:: ==========================
-:: Qt 和工具链配置
-:: ==========================
+:: 设置Qt版本
 SET QT_VERSION=6.9.1
-SET LLVM_MINGW_PATH=D:\a\bqt\llvm-mingw-20250528-ucrt-x86_64\bin
-SET NINJA_PATH=D:\a\bqt\ninja
-SET PATH=%LLVM_MINGW_PATH%;%NINJA_PATH%;%PATH%
 
+:: 设置LLVM-MinGW版本代号
+SET LLVM_MinGW_VERSION=llvm-mingw-20250528-ucrt-x86_64
+
+:: 设置编译器和Ninja路径
+SET PATH=D:\a\bqt\%LLVM_MinGW_VERSION%\bin;D:\a\bqt\ninja;%PATH%
+
+:: 设置Qt文件夹路径
 SET QT_PATH=D:\a\bqt\Qt
+
+:: 公共源代码路径
 SET SRC_QT=%QT_PATH%\%QT_VERSION%\qt-everywhere-src-%QT_VERSION%
 
-:: 通用配置参数
-SET COMMON_CFG=-opensource -confirm-license -nomake tests -nomake examples -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -schannel
+:: 公共configure参数
+:: -openssl-linked: 启用链接 OpenSSL 库
+:: -openssl-incdir: 指定 OpenSSL 头文件目录 (从 yml 文件中继承环境变量)
+:: -openssl-libdir: 指定 OpenSSL 库文件目录 (从 yml 文件中继承环境变量)
+SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -openssl-linked -openssl-incdir "%OPENSSL_INCDIR%" -openssl-libdir "%OPENSSL_LIBDIR%"
 
-REM :: ==========================
-REM :: 1. 64位 Debug 共享库
-REM :: ==========================
-REM SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x64-Debug-shared
-REM SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x64-Debug-shared
-REM rmdir /s /q "%BUILD_DIR%" 2>nul
-REM mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
+:: ================================
+:: 64位 Debug 共享库
+:: ================================
+SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-64-debug-shared
+SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%-64-debug-shared
 
-REM call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- ^
-REM   -DCMAKE_C_FLAGS=-m64 ^
-REM   -DCMAKE_CXX_FLAGS=-m64 ^
-REM   -DCMAKE_RC_COMPILER=llvm-rc ^
-REM   -DCMAKE_RC_FLAGS="--machine=amd64"
-REM cmake --build . --parallel
-REM cmake --install .
-REM copy %~dp0\qt.conf %INSTALL_DIR%\bin
-
-REM :: ==========================
-REM :: 2. 64位 Release 静态库
-REM :: ==========================
-REM SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x64-Release-static
-REM SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x64-Release-static
-REM rmdir /s /q "%BUILD_DIR%" 2>nul
-REM mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
-
-REM call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- ^
-REM   -DCMAKE_C_FLAGS=-m64 ^
-REM   -DCMAKE_CXX_FLAGS=-m64 ^
-REM   -DCMAKE_RC_COMPILER=llvm-rc ^
-REM   -DCMAKE_RC_FLAGS="--machine=amd64"
-REM cmake --build . --parallel
-REM cmake --install .
-REM copy %~dp0\qt.conf %INSTALL_DIR%\bin
-
-:: ==========================
-:: 3. 32位 Debug 共享库
-:: ==========================
-SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Debug-shared
-SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Debug-shared
-rmdir /s /q "%BUILD_DIR%" 2>nul
+rmdir /s /q "%BUILD_DIR%"
 mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix %INSTALL_DIR% -- ^
-  -DCMAKE_C_FLAGS=-m32 ^
-  -DCMAKE_CXX_FLAGS=-m32 ^
-  -DCMAKE_RC_COMPILER=llvm-rc ^
-  -DCMAKE_RC_FLAGS="--machine=ix86"
+call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix "%INSTALL_DIR%"
+
 cmake --build . --parallel
 cmake --install .
-copy %~dp0\qt.conf %INSTALL_DIR%\bin
 
-:: ==========================
-:: 4. 32位 Release 静态库
-:: ==========================
-SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-x86-Release-static
-SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%\install-x86-Release-static
-rmdir /s /q "%BUILD_DIR%" 2>nul
+:: 复制OpenSSL DLLs到安装目录（针对共享库构建）
+echo "Copying OpenSSL DLLs for shared debug build..."
+copy "%OPENSSL_LIBDIR%\..\bin\libcrypto-3-x64.dll" "%INSTALL_DIR%\bin"
+copy "%OPENSSL_LIBDIR%\..\bin\libssl-3-x64.dll" "%INSTALL_DIR%\bin"
+echo "Copying done."
+
+
+:: ================================
+:: 64位 Release 静态库
+:: ================================
+SET BUILD_DIR=%QT_PATH%\%QT_VERSION%\build-64-release-static
+SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%-64-release-static
+
+rmdir /s /q "%BUILD_DIR%"
 mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -prefix %INSTALL_DIR% -- ^
-  -DCMAKE_C_FLAGS=-m32 ^
-  -DCMAKE_CXX_FLAGS=-m32 ^
-  -DCMAKE_RC_COMPILER=llvm-rc ^
-  -DCMAKE_RC_FLAGS="--machine=ix86"
+call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -static-runtime -prefix "%INSTALL_DIR%"
+
 cmake --build . --parallel
 cmake --install .
-copy %~dp0\qt.conf %INSTALL_DIR%\bin
 
-:: ==========================
-:: 结束
-:: ==========================
-@echo.
-@echo Qt %QT_VERSION% 四个版本全部编译完成！
-@cmd /k
+
+:: ================================
+:: 复制 qt.conf (可选)
+:: ================================
+echo "Copying qt.conf..."
+copy %~dp0\qt.conf "%QT_PATH%\%QT_VERSION%-64-debug-shared\bin"
+copy %~dp0\qt.conf "%QT_PATH%\%QT_VERSION%-64-release-static\bin"
+echo "All tasks completed."
