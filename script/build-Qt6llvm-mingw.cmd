@@ -16,12 +16,8 @@ SET QT_PATH=D:\a\bqt\Qt
 :: 公共源代码路径
 SET SRC_QT=%QT_PATH%\%QT_VERSION%\qt-everywhere-src-%QT_VERSION%
 
-SET OPENSSL_ROOT_DIR=D:\msys64\ucrt64
-SET OPENSSL_INCDIR=D:\msys64\ucrt64\include
-SET OPENSSL_LIBDIR=D:\msys64\ucrt64\lib
-
 :: 公共configure参数
-SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype -openssl-linked
+SET COMMON_CFG=-opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre -qt-freetype
 
 :: ================================
 :: 64位 Debug 共享库
@@ -32,7 +28,7 @@ SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%-64-debug-shared
 rmdir /s /q "%BUILD_DIR%"
 mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix "%INSTALL_DIR%" -DOPENSSL_ROOT_DIR="D:/msys64/ucrt64"
+call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix "%INSTALL_DIR%"
 
 cmake --build . --parallel
 cmake --install .
@@ -52,7 +48,7 @@ SET INSTALL_DIR=%QT_PATH%\%QT_VERSION%-64-release-static
 rmdir /s /q "%BUILD_DIR%"
 mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
 
-call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -static-runtime -prefix "%INSTALL_DIR%" -DOPENSSL_ROOT_DIR="D:/msys64/ucrt64"
+call %SRC_QT%\configure.bat %COMMON_CFG% -release -static -static-runtime -prefix "%INSTALL_DIR%"
 
 cmake --build . --parallel
 cmake --install .

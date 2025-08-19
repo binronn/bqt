@@ -38,14 +38,6 @@ jobs:
         curl -L -o ninja.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
         7z x ninja.zip -o"D:\a\bqt\ninja"
 
-    # 安装 MSYS2 并安装 OpenSSL
-    - name: Setup MSYS2 and OpenSSL
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        update: true
-        install: mingw-w64-ucrt-x86_64-openssl
-
     # 构建Qt
     - name: Build Qt
       shell: pwsh
@@ -64,27 +56,16 @@ jobs:
         curl -L -o qt-everywhere-src.zip https://download.qt.io/official_releases/qt/${{env.QT_VERSION2}}/${{env.QT_VERSION}}/single/qt-everywhere-src-${{env.QT_VERSION}}.zip
         7z x qt-everywhere-src.zip -o"$qtVersionDir"
 
-        # 设置 OpenSSL 路径环境变量
-        $msysPath = "D:\msys64\ucrt64"
-        $env:OPENSSL_INCDIR = "$msysPath\include"
-        $env:OPENSSL_LIBDIR = "$msysPath\lib"
-        
-        Write-Host "OPENSSL_INCDIR is set to: $env:OPENSSL_INCDIR"
-        Write-Host "OPENSSL_LIBDIR is set to: $env:OPENSSL_LIBDIR"
-
         # 调用编译脚本
         cmd.exe /c "call `"${{ github.workspace }}\script\build-Qt6llvm-mingw.cmd`""
 
     # 打包
     - name: Package binaries
       run: |
-        7z a Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z D:\a\bqt\Qt\${{env.QT_VERSION}}-64-debug-shared -mx=9
-        7z a Qt_${{env.QT_VERSION}}-x64-Release-static.7z D:\a\bqt\Qt\${{env.QT_VERSION}}-64-release-static -mx=9
+        7z a Qt_${{env.QT_VERSION}}-${{env.LLVM_MinGW_VERSION}}.7z D:\a\bqt\Qt\${{env.QT_VERSION}}-64-debug-shared D:\a\bqt\Qt\${{env.QT_VERSION}}-64-release-static -mx=9
 
     # 上传构建产物
     - uses: actions/upload-artifact@v4
       with:
         name: Qt_${{env.QT_VERSION}}-${{env.LLVM_MinGW_VERSION}}
-        path: |
-          Qt_${{env.QT_VERSION}}-x64-Debug-shared.7z
-          Qt_${{env.QT_VERSION}}-x64-Release-static.7z
+        path: Qt_${{env.QT_VERSION}}-${{env.LLVM_MinGW_VERSION}}.7z
