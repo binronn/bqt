@@ -73,7 +73,7 @@ jobs:
         Write-Host "OPENSSL_LIBDIR is set to: $env:OPENSSL_LIBDIR"
 
         # 调用编译脚本
-        cmd.exe /c "call `"D:\a\bqt\bqt\bqt6\build-Qt6llvm-mingw.cmd`""
+        cmd.exe /c "call `"${{ github.workspace }}\script\build-Qt6llvm-mingw.cmd`""
 
     # 打包
     - name: Package binaries
