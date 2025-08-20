@@ -1,12 +1,6 @@
 @chcp 65001
 @cd /d %~dp0
 
-:: 设置Qt版本
-SET QT_VERSION=6.9.1
-
-:: 设置LLVM-MinGW版本代号
-SET LLVM_MinGW_VERSION=llvm-mingw-20250528-ucrt-x86_64
-
 :: 设置编译器和Ninja路径
 SET PATH=D:\a\bqt\%LLVM_MinGW_VERSION%\bin;D:\a\bqt\ninja;%PATH%
 
@@ -33,6 +27,11 @@ call %SRC_QT%\configure.bat %COMMON_CFG% -debug -shared -prefix "%INSTALL_DIR%"
 cmake --build . --parallel
 cmake --install .
 
+IF EXIST %~dp0\qt.conf (
+    echo "Copying qt.conf..."
+    copy %~dp0\qt.conf %INSTALL_DIR%\bin
+)
+
 :: ================================
 :: 64位 Release 静态库
 :: ================================
@@ -51,7 +50,8 @@ cmake --install .
 :: ================================
 :: 复制 qt.conf (可选)
 :: ================================
-echo "Copying qt.conf..."
-copy %~dp0\qt.conf "%QT_PATH%\%QT_VERSION%-64-debug-shared\bin"
-copy %~dp0\qt.conf "%QT_PATH%\%QT_VERSION%-64-release-static\bin"
+IF EXIST %~dp0\qt.conf (
+    echo "Copying qt.conf..."
+    copy %~dp0\qt.conf %INSTALL_DIR%\bin
+)
 echo "All tasks completed."
